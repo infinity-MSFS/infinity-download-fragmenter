@@ -49,15 +49,16 @@ fn compute_diff(image1: &[u8], image2: &[u8]) -> Vec<u8> {
         .collect()
 }
 
-pub fn create_diff(path1: &str, path2: &str, output: &str) -> std::io::Result<()> {
+pub fn create_diff(path1: &str, path2: &str) -> Vec<u8> {
     let (_, original_data) = read_dds(path1);
     let (_, ending_data) = read_dds(path2);
 
     let diff = compute_diff(&original_data, &ending_data);
 
-    save_diff(output, &diff);
+    // save_diff(output, &diff);
+    return diff;
 
-    Ok(())
+    // Ok(())
 }
 
 pub fn patch_image(

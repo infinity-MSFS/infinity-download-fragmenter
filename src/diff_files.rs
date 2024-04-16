@@ -1,4 +1,5 @@
-use bsdiff::diff;
+use crate::dds_differ::create_diff;
+use bidiff::simple_diff as bdiff;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
@@ -22,11 +23,19 @@ fn trim_relative_path(relative_path: &str) -> String {
 }
 
 fn diff_files(file_a: &str, file_b: &str) -> Vec<u8> {
-    let old = fs::read(file_a).expect("failed to read old file");
-    let new = fs::read(file_b).expect("failed to read new file");
     let mut patch = Vec::new();
 
-    diff(&old, &new, &mut patch).expect("failed to diff files");
+    // Use dds differ for DDS files, otherwise use bsdiff
+    if file_a.to_ascii_lowercase().ends_with(".dds")
+        && file_b.to_ascii_lowercase().ends_with(".dds")
+    {
+        patch = create_diff(file_a, file_b);
+    } else {
+        let old = fs::read(file_a).expect("failed to read old file");
+        let new = fs::read(file_b).expect("failed to read new file");
+        bdiff(&old, &new, &mut patch).expect("failed to diff files");
+    }
+
     patch
 }
 
