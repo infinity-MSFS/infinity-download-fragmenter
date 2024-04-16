@@ -10,6 +10,14 @@ use tokio::task;
 
 use crate::map_struct::PatchMapStructure;
 
+fn trim_relative_path(relative_path: &str) -> String {
+    if let Some(last_slash_idx) = relative_path.rfind('\\') {
+        relative_path[(last_slash_idx + 1)..].to_string()
+    } else {
+        relative_path.to_string()
+    }
+}
+
 fn diff_files(file_a: &str, file_b: &str) -> Vec<u8> {
     let old = fs::read(file_a).expect("failed to read old file");
     let new = fs::read(file_b).expect("failed to read new file");
@@ -61,14 +69,9 @@ pub async fn dif_from_map(
 
             println!("Time taken for {}: {:?}", relative_path, elapsed_time);
 
-            if let Ok(json_str) = serde_json::to_string(&diff_result) {
-                let mut file =
-                    File::create(format!("{}.json", relative_path)).expect("failed to create file");
-                file.write_all(json_str.as_bytes())
-                    .expect("failed to write")
-            } else {
-                eprintln!("failed to serialize for {}", relative_path);
-            }
+            let mut file = File::create(format!("{}.bin", trim_relative_path(&relative_path)))
+                .expect("failed to create file");
+            file.write_all(&diff_result).expect("failed to write")
         });
         handles.push(handle);
     }
