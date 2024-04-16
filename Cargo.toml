@@ -12,3 +12,4 @@ serde_json="1.0"
 walkdir = "2.5.0"
 hex = "0.4.3"
 bsdiff = { git = "https://github.com/space-wizards/bsdiff-rs" }
+tokio = { version = "1", features = ["full"] }
