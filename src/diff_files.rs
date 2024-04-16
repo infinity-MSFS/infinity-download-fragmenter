@@ -34,7 +34,7 @@ pub async fn dif_from_map(
 
     let map_changed_file = map_arc.clone();
 
-    for relative_path in map_changed_file.added_files.clone() {
+    for relative_path in map_changed_file.changed_files.clone() {
         let file_path_a = format!("{}/{}", aircraft_folder_a, relative_path);
         let file_path_b = format!("{}/{}", aircraft_folder_b, relative_path);
 
