@@ -35,7 +35,7 @@ pub async fn dif_from_map(
     output_path: &str,
 ) -> std::io::Result<()> {
     let map_arc = Arc::new(map);
-    let mut download_file: Arc<Mutex<HashMap<String, Vec<u8>>>> =
+    let download_file: Arc<Mutex<HashMap<String, (u32, Vec<u8>)>>> =
         Arc::new(Mutex::new(HashMap::new()));
 
     let mut handles = vec![];
@@ -60,7 +60,7 @@ pub async fn dif_from_map(
             );
             continue; // Skip this file and move to the next one
         }
-        let download_file: Arc<Mutex<HashMap<String, Vec<u8>>>> = Arc::clone(&download_file);
+        let download_file: Arc<Mutex<HashMap<String, (u32, Vec<u8>)>>> = Arc::clone(&download_file);
 
         let handle = tokio::spawn(async move {
             let start_time = Instant::now();
@@ -69,9 +69,22 @@ pub async fn dif_from_map(
 
             println!("Time taken for {}: {:?}", relative_path, elapsed_time);
 
-            let mut file = File::create(format!("{}.bin", trim_relative_path(&relative_path)))
-                .expect("failed to create file");
-            file.write_all(&diff_result).expect("failed to write")
+            let mut file_data = Vec::new();
+            file_data
+                .write_all(&(relative_path.len() as u32).to_le_bytes())
+                .expect("failed to write key length");
+            file_data
+                .write_all(relative_path.as_bytes())
+                .expect("failed to write key");
+            file_data
+                .write_all(&(diff_result.len() as u32).to_le_bytes())
+                .expect("failed to write data length");
+            file_data.extend_from_slice(&diff_result);
+
+            download_file
+                .lock()
+                .unwrap()
+                .insert(relative_path.clone(), (file_data.len() as u32, file_data));
         });
         handles.push(handle);
     }
@@ -80,13 +93,12 @@ pub async fn dif_from_map(
         handle.await?;
     }
 
-    let output_json = serde_json::to_string_pretty(&download_file.lock().unwrap().clone())
-        .expect("failed to serialize hashmap");
-
-    let output_path = format!("{}/.download", output_path);
-    let mut file = File::create(output_path).expect("failed to create file");
-    file.write_all(output_json.as_bytes())
-        .expect("failed to write to file");
+    let output_file_path = format!("{}/combined.bin", output_path);
+    let mut output_file = File::create(output_file_path)?;
+    for (_, (key_len, data)) in download_file.lock().unwrap().iter() {
+        output_file.write_all(&key_len.to_le_bytes())?;
+        output_file.write_all(data)?;
+    }
 
     Ok(())
 }
