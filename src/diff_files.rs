@@ -1,4 +1,5 @@
 use bsdiff::diff;
+use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -35,14 +36,9 @@ pub async fn dif_from_map(
     output_path: &str,
 ) -> std::io::Result<()> {
     let map_arc = Arc::new(map);
-    let download_file: Arc<Mutex<HashMap<String, (u32, Vec<u8>)>>> =
-        Arc::new(Mutex::new(HashMap::new()));
+    let mut combined_data = vec![Vec::new(); map_arc.changed_files.len()];
 
-    let mut handles = vec![];
-
-    let map_changed_file = map_arc.clone();
-
-    for relative_path in map_changed_file.changed_files.clone() {
+    for (index, relative_path) in map_arc.changed_files.iter().enumerate() {
         let file_path_a = format!("{}/{}", aircraft_folder_a, relative_path);
         let file_path_b = format!("{}/{}", aircraft_folder_b, relative_path);
 
@@ -60,45 +56,54 @@ pub async fn dif_from_map(
             );
             continue; // Skip this file and move to the next one
         }
-        let download_file: Arc<Mutex<HashMap<String, (u32, Vec<u8>)>>> = Arc::clone(&download_file);
 
-        let handle = tokio::spawn(async move {
-            let start_time = Instant::now();
-            let diff_result = diff_files(&file_path_a, &file_path_b);
-            let elapsed_time = start_time.elapsed();
+        let handle = spawn_task_async(
+            Arc::clone(&map_arc),
+            Arc::clone(&aircraft_folder_a),
+            Arc::clone(&aircraft_folder_b),
+            relative_path.clone(),
+            index,
+            &mut combined_data,
+        );
 
-            println!("Time taken for {}: {:?}", relative_path, elapsed_time);
-
-            let mut file_data = Vec::new();
-            file_data
-                .write_all(&(relative_path.len() as u32).to_le_bytes())
-                .expect("failed to write key length");
-            file_data
-                .write_all(relative_path.as_bytes())
-                .expect("failed to write key");
-            file_data
-                .write_all(&(diff_result.len() as u32).to_le_bytes())
-                .expect("failed to write data length");
-            file_data.extend_from_slice(&diff_result);
-
-            download_file
-                .lock()
-                .unwrap()
-                .insert(relative_path.clone(), (file_data.len() as u32, file_data));
-        });
-        handles.push(handle);
-    }
-
-    for handle in handles {
         handle.await?;
     }
 
     let output_file_path = format!("{}/combined.bin", output_path);
-    let mut output_file = File::create(output_file_path)?;
-    for (_, (key_len, data)) in download_file.lock().unwrap().iter() {
-        output_file.write_all(&key_len.to_le_bytes())?;
+    let mut output_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(output_file_path)?;
+
+    for data in &combined_data {
         output_file.write_all(data)?;
     }
+
+    Ok(())
+}
+
+async fn spawn_task_async(
+    map_arc: Arc<PatchMapStructure>,
+    aircraft_folder_a: Arc<String>,
+    aircraft_folder_b: Arc<String>,
+    relative_path: String,
+    index: usize,
+    combined_data: &mut Vec<Vec<u8>>,
+) -> std::io::Result<()> {
+    let file_path_a = format!("{}/{}", aircraft_folder_a, relative_path);
+    let file_path_b = format!("{}/{}", aircraft_folder_b, relative_path);
+
+    let start_time = Instant::now();
+    let diff_result = diff_files(&file_path_a, &file_path_b);
+    let elapsed_time = start_time.elapsed();
+
+    println!("Time taken for {}: {:?}", relative_path, elapsed_time);
+
+    println!("Diff result for {}: {:?}", relative_path, diff_result);
+
+    // Insert diff result at the correct index in the combined_data vector
+    combined_data[index] = diff_result;
 
     Ok(())
 }
