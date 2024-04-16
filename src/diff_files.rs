@@ -37,12 +37,20 @@ pub async fn dif_from_map(
     for relative_path in map_changed_file.added_files.clone() {
         let file_path_a = format!("{}/{}", aircraft_folder_a, relative_path);
         let file_path_b = format!("{}/{}", aircraft_folder_b, relative_path);
+
+        if let Err(err) = fs::metadata(&file_path_a) {
+            eprintln!(
+                "Error: {} does not exist or is inaccessible: {}",
+                file_path_a, err
+            );
+            continue; // Skip this file and move to the next one
+        }
+
         println!("Paths: {} and {}", file_path_a, file_path_b);
         let download_file: Arc<Mutex<HashMap<String, Vec<u8>>>> = Arc::clone(&download_file);
 
         let handle = tokio::spawn(async move {
             let start_time = Instant::now();
-            println!("diffing file: {}", relative_path);
             let diff_result = diff_files(&file_path_a, &file_path_b);
             let elapsed_time = start_time.elapsed();
 
