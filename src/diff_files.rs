@@ -1,5 +1,6 @@
 use bsdiff::diff;
 use std::io::Write;
+use std::time::{Duration, Instant};
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -24,13 +25,22 @@ pub fn dif_from_map(
     output_path: &str,
 ) -> std::io::Result<()> {
     let mut download_file = HashMap::new();
+    let map_length = map.changed_files.len();
 
-    for relative_path in map.changed_files {
+    for (index, relative_path) in map.changed_files.iter().enumerate() {
         let file_path_a = format!("{}/{}", aircraft_folder_a, relative_path);
         let file_path_b = format!("{}/{}", aircraft_folder_b, relative_path);
+
+        let start_time = Instant::now();
         let diff_result = diff_files(&file_path_a, &file_path_b);
+        let elapsed_time = start_time.elapsed();
 
         download_file.insert(relative_path, diff_result);
+
+        let progress_percentage = ((index + 1) as f32 / map_length as f32) * 100.0;
+        println!("Processed {} ({:.2}%)", relative_path, progress_percentage);
+
+        println!("Time taken for {}: {:?}", relative_path, elapsed_time);
     }
 
     let output_json =
