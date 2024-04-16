@@ -32,6 +32,7 @@ pub fn dif_from_map(
         let file_path_b = format!("{}/{}", aircraft_folder_b, relative_path);
 
         let start_time = Instant::now();
+        println!("diffing file: {}", relative_path);
         let diff_result = diff_files(&file_path_a, &file_path_b);
         let elapsed_time = start_time.elapsed();
 
