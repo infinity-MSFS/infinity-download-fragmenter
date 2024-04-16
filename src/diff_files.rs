@@ -100,9 +100,6 @@ async fn spawn_task_async(
 
     println!("Time taken for {}: {:?}", relative_path, elapsed_time);
 
-    println!("Diff result for {}: {:?}", relative_path, diff_result);
-
-    // Insert diff result at the correct index in the combined_data vector
     combined_data[index] = diff_result;
 
     Ok(())
