@@ -27,3 +27,5 @@ fn main() {
     infinity_download_fragmenter::patch_via_map(map.json_from_api, patch, PATH_AIRCRAFT_OLD_REPO).expect("Failed to Patch");
 }
 ```
+
+and there it is; no unzipping, very fast patches, and small downloads
