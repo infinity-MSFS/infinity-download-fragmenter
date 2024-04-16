@@ -52,8 +52,6 @@ pub async fn dif_from_map(
             );
             continue; // Skip this file and move to the next one
         }
-
-        println!("Paths: {} and {}", file_path_a, file_path_b);
         let download_file: Arc<Mutex<HashMap<String, Vec<u8>>>> = Arc::clone(&download_file);
 
         let handle = tokio::spawn(async move {
@@ -61,12 +59,16 @@ pub async fn dif_from_map(
             let diff_result = diff_files(&file_path_a, &file_path_b);
             let elapsed_time = start_time.elapsed();
 
-            download_file
-                .lock()
-                .unwrap()
-                .insert(relative_path.clone(), diff_result);
-
             println!("Time taken for {}: {:?}", relative_path, elapsed_time);
+
+            if let Ok(json_str) = serde_json::to_string(&diff_result) {
+                let mut file =
+                    File::create(format!("{}.json", relative_path)).expect("failed to create file");
+                file.write_all(json_str.as_bytes())
+                    .expect("failed to write")
+            } else {
+                eprintln!("failed to serialize for {}", relative_path);
+            }
         });
         handles.push(handle);
     }
