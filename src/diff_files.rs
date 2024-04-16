@@ -40,14 +40,14 @@ pub async fn dif_from_map(
 
         if let Err(err) = fs::metadata(&file_path_a) {
             eprintln!(
-                "Error: {} does not exist or is inaccessible: {}",
+                "Error model A: {} does not exist or is inaccessible: {}",
                 file_path_a, err
             );
             continue; // Skip this file and move to the next one
         }
         if let Err(err) = fs::metadata(&file_path_b) {
             eprintln!(
-                "Error: {} does not exist or is inaccessible: {}",
+                "Error model B: {} does not exist or is inaccessible: {}",
                 file_path_a, err
             );
             continue; // Skip this file and move to the next one
