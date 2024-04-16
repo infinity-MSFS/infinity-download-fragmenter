@@ -91,7 +91,7 @@ pub fn compare_hash(old_path: &str, new_path: &str, output_path: &str) -> io::Re
 
     let output_json = serde_json::to_string_pretty(&output_map)?;
 
-    let output_path = format!("{}/map.json", output_path);
+    let output_path = format!("{}/hash.json", output_path);
     let mut file = File::create(output_path)?;
     file.write_all(output_json.as_bytes())?;
 
