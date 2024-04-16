@@ -1,3 +1,4 @@
+pub mod dds_differ;
 pub mod diff_files;
 pub mod hash;
 pub mod map_struct;
