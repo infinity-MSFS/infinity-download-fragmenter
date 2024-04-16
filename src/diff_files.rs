@@ -8,6 +8,8 @@ use std::{
     fs::{self, File},
 };
 use tokio::task;
+use zip::write::FileOptions;
+use zip::{CompressionMethod, ZipWriter};
 
 use crate::map_struct::PatchMapStructure;
 
@@ -80,11 +82,25 @@ pub async fn dif_from_map(
     }
 
     let output_file_path = format!("{}/combined.bin", output_path);
-    let mut output_file = File::create(output_file_path)?;
+    let mut output_file = File::create(output_file_path.clone())?;
 
     for data in &combined_data {
         output_file.write_all(data)?;
     }
+
+    let zip_path = format!("{}/combined.zip", output_path);
+    let zip_file = File::create(&zip_path)?;
+    let mut writer = ZipWriter::new(zip_file);
+
+    let options = FileOptions::default()
+        .compression_method(CompressionMethod::Zstd)
+        .unix_permissions(0o755);
+
+    writer.start_file("combined.bin", options)?;
+    let mut output_file = File::open(&output_file_path)?;
+    std::io::copy(&mut output_file, &mut writer)?;
+
+    writer.finish()?;
 
     Ok(())
 }
