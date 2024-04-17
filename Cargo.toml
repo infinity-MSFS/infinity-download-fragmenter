@@ -18,3 +18,4 @@ rayon = "1.10.0"
 bidiff = { git = "https://github.com/divvun/bidiff" }
 flate2 = "1.0.28"
 hdiff_rs = {git = "https://github.com/Tacotakedown/hdiff-rs"}
+

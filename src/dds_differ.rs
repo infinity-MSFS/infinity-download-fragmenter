@@ -20,7 +20,7 @@ fn save_dds(filename: &str, header: &[u8], data: &[u8]) {
     file.write_all(data).expect("Failed to write data");
 }
 
-fn save_diff(filename: &str, diff: &[u8]) {
+fn _save_diff(filename: &str, diff: &[u8]) {
     let file = File::create(filename).expect("Failed to create file");
     let writer = Arc::new(Mutex::new(BufWriter::new(file)));
 
@@ -53,12 +53,7 @@ pub fn create_diff(path1: &str, path2: &str) -> Vec<u8> {
     let (_, original_data) = read_dds(path1);
     let (_, ending_data) = read_dds(path2);
 
-    let diff = compute_diff(&original_data, &ending_data);
-
-    // save_diff(output, &diff);
-    diff
-
-    // Ok(())
+    compute_diff(&original_data, &ending_data)
 }
 
 pub fn patch_image(

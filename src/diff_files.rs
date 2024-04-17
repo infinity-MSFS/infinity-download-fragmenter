@@ -1,20 +1,13 @@
 use crate::dds_differ::create_diff;
-use bidiff::simple_diff as bdiff;
-use std::fs::OpenOptions;
-use std::io::{self, Write};
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
-use std::{
-    collections::HashMap,
-    fs::{self, File},
-};
-use tokio::task;
-use zip::write::FileOptions;
-use zip::{CompressionMethod, ZipWriter};
-
 use crate::map_struct::PatchMapStructure;
+use bidiff::simple_diff as bdiff;
+use std::fs;
+use std::io;
+use std::sync::Arc;
+use std::time::Instant;
+use tokio::task;
 
-fn trim_relative_path(relative_path: &str) -> String {
+fn _trim_relative_path(relative_path: &str) -> String {
     if let Some(last_slash_idx) = relative_path.rfind('\\') {
         relative_path[(last_slash_idx + 1)..].to_string()
     } else {
@@ -22,7 +15,7 @@ fn trim_relative_path(relative_path: &str) -> String {
     }
 }
 
-fn diff_files(file_a: &str, file_b: &str) -> Vec<u8> {
+fn _diff_files(file_a: &str, file_b: &str) -> Vec<u8> {
     let mut patch = Vec::new();
 
     // Use dds differ for DDS files, otherwise use bsdiff
@@ -50,7 +43,7 @@ async fn spawn_task_async(
 
     let start_time = Instant::now();
 
-    let output_path = format!("{}/{}.bin", output_path, relative_path.replace("\\", "."));
+    let output_path = format!("{}/{}.bin", output_path, relative_path.replace("'\\'", "."));
 
     hdiff_rs::diff_files(&file_path_a, &file_path_b, &output_path).expect("error diffing");
     let elapsed_time = start_time.elapsed();
