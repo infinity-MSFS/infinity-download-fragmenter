@@ -322,7 +322,7 @@ checksum = "4271d37baee1b8c7e4b708028c57d816cf9d2434acb33a549475f78c181f6253"
 [[package]]
 name = "hdiff_rs"
 version = "0.1.0"
-source = "git+https://github.com/Tacotakedown/hdiff-rs#47397b7f98e58a0f811ee6573949a60fa9025870"
+source = "git+https://github.com/Tacotakedown/hdiff-rs#f6c111c0d218a31a2e1663d76d04f61cf23e2229"
 
 [[package]]
 name = "hermit-abi"

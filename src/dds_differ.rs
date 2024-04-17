@@ -56,7 +56,7 @@ pub fn create_diff(path1: &str, path2: &str) -> Vec<u8> {
     let diff = compute_diff(&original_data, &ending_data);
 
     // save_diff(output, &diff);
-    return diff;
+    diff
 
     // Ok(())
 }
