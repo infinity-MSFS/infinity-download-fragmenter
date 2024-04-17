@@ -50,7 +50,7 @@ async fn spawn_task_async(
 
     let start_time = Instant::now();
 
-    let output_path = format!("{}/{}", output_path, relative_path.replace("\\", "."));
+    let output_path = format!("{}/{}.bin", output_path, relative_path.replace("\\", "."));
 
     hdiff_rs::diff_files(&file_path_a, &file_path_b, &output_path).expect("error diffing");
     let elapsed_time = start_time.elapsed();
